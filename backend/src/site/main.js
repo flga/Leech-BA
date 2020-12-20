@@ -1,3 +1,5 @@
+const { console } = require('../utils');
+
 exports.run = function (database, getQueueChannel) {
   'use strict';
   const express = require('express');
@@ -60,10 +62,10 @@ exports.run = function (database, getQueueChannel) {
   app.get('/howtoleech', (req, res) => {
     res.sendFile(root + '/index.html');
   });
-  app.get('/queue', sessionChecker, (req, res) => {
+  app.get('/ranks', (req, res) => {
     res.sendFile(root + '/index.html');
   });
-  app.get('/mgwqueue', (req, res) => {
+  app.get('/queue', sessionChecker, (req, res) => {
     res.sendFile(root + '/index.html');
   });
   app.get('/splits', sessionChecker, (req, res) => {
@@ -96,38 +98,36 @@ exports.run = function (database, getQueueChannel) {
 
   app.get('/logout', async (req, res) => {
     req.session = null;
-    res.json({response: true});
+    await res.json({ response: true });
   });
 
   app.post('/api/deletecustomer', async (req, res) => {
     if (req.session.user) {
       if (req.body.id === undefined) {
-        res.status(400).json({error: 'no id specified'});
+        res.status(400).json({ error: 'no id specified' });
         return;
       }
       const success = await database.deleteCustomer(req.session.user.uid, req.body.id, req.body.rsn);
-      res.json({response: success});
-    }
-    else {
-      res.status(403).json({error: 'who are you?'});
+      await res.json({ response: success });
+    } else {
+      res.status(403).json({ error: 'who are you?' });
     }
   });
   app.post('/api/savecustomer', async (req, res) => {
     if (req.session.user) {
-      // TODO more checks
       if (req.body.services.bxp) {
         if (req.body.services.bxp.agility === '' ||
           req.body.services.bxp.mining === '' ||
           req.body.services.bxp.firemaking === '' ||
           Object.keys(req.body.services.bxp).length === 0) {
-          res.status(400).json({error: 'there are null fields'});
+          res.status(400).json({ error: 'there are null fields' });
           return;
         }
       }
-      const success = await database.saveCustomer(req.session.user.uid, req.body); //TODO add handling for if rsn already exists
-      res.json({response: true});
+      await database.saveCustomer(req.session.user.uid, req.body); //TODO add handling for if rsn already exists
+      await res.json({ response: true });
     } else {
-      res.status(403).json({error: 'who are you?'});
+      res.status(403).json({ error: 'who are you?' });
     }
   });
   app.post('/api/addcustomer', async (req, res) => {
@@ -138,52 +138,56 @@ exports.run = function (database, getQueueChannel) {
           req.body.services.bxp.mining === '' ||
           req.body.services.bxp.firemaking === '' ||
           Object.keys(req.body.services.bxp).length === 0) {
-          res.status(400).json({error: 'there are null fields'});
+          res.status(400).json({ error: 'there are null fields' });
           return;
         }
       }
-      const success = await database.newCustomer(req.session.user.uid, req.body); //TODO add handling for if rsn already exists
-      res.json({response: true});
+      await database.newCustomer(req.session.user.uid, req.body);
+      //TODO add handling for if rsn already exists
+      await res.json({ response: true });
     } else {
-      res.status(403).json({error: 'who are you?'});
+      res.status(403).json({ error: 'who are you?' });
     }
   });
 
   app.get('/api/amiloggedin', async (req, res) => {
     if (req.session.user && await database.checkRank(req.session.user.uid)) {
-      res.json({response: true, user: req.session.user['dname']});
+      await res.json({ response: true, user: req.session.user['dname'] });
     } else {
-      res.json({response: false});
+      await res.json({ response: false });
     }
+  });
+
+  app.get('/api/ranks', async (req, res) => {
+    await res.json({ response: await database.getRanks() });
   });
 
   app.get('/api/queue', async (req, res) => {
     if (req.session.user) {
-      res.json({response: await database.getQueue(), update: await database.getLastUpdate()});
+      await res.json({ response: await database.getQueue(), update: await database.getLastUpdate() });
     } else {
-      res.status(403).json({error: 'not logged in'});
+      res.status(403).json({ error: 'not logged in' });
     }
   });
 
   app.get('/api/mgw/queue', async (req, res) => {
     if (req.session.user) {
-      res.json({response: await database.getQueue(true), update: await database.getLastUpdate(true)});
+      await res.json({ response: await database.getQueue(true), update: await database.getLastUpdate(true) });
     } else {
-      res.status(403).json({error: 'not logged in'});
+      res.status(403).json({ error: 'not logged in' });
     }
   });
 
   app.post('/api/mgw/deletecustomer', async (req, res) => {
     if (req.session.user) {
       if (req.body.id === undefined) {
-        res.status(400).json({error: 'no id specified'});
+        res.status(400).json({ error: 'no id specified' });
         return;
       }
       const success = await database.deleteCustomer(req.session.user.uid, req.body.id, req.body.rsn, true);
-      res.json({response: success});
-    }
-    else {
-      res.status(403).json({error: 'who are you?'});
+      await res.json({ response: success });
+    } else {
+      res.status(403).json({ error: 'who are you?' });
     }
   });
   app.post('/api/mgw/savecustomer', async (req, res) => {
@@ -194,14 +198,14 @@ exports.run = function (database, getQueueChannel) {
           req.body.services.bxp.mining === '' ||
           req.body.services.bxp.firemaking === '' ||
           Object.keys(req.body.services.bxp).length === 0) {
-          res.status(400).json({error: 'there are null fields'});
+          res.status(400).json({ error: 'there are null fields' });
           return;
         }
       }
-      const success = await database.saveCustomer(req.session.user.uid, req.body, true); //TODO add handling for if rsn already exists
-      res.json({response: true});
+      await database.saveCustomer(req.session.user.uid, req.body, true); //TODO add handling for if rsn already exists
+      await res.json({ response: true });
     } else {
-      res.status(403).json({error: 'who are you?'});
+      res.status(403).json({ error: 'who are you?' });
     }
   });
   app.post('/api/mgw/addcustomer', async (req, res) => {
@@ -212,35 +216,34 @@ exports.run = function (database, getQueueChannel) {
           req.body.services.bxp.mining === '' ||
           req.body.services.bxp.firemaking === '' ||
           Object.keys(req.body.services.bxp).length === 0) {
-          res.status(400).json({error: 'there are null fields'});
+          res.status(400).json({ error: 'there are null fields' });
           return;
         }
       }
-      const success = await database.newCustomer(req.session.user.uid, req.body, true); //TODO add handling for if rsn already exists
-      res.json({response: true});
+      await database.newCustomer(req.session.user.uid, req.body, true); //TODO add handling for if rsn already exists
+      await res.json({ response: true });
     } else {
-      res.status(403).json({error: 'who are you?'});
+      res.status(403).json({ error: 'who are you?' });
     }
   });
   app.post('/api/mgw/bottom', async (req, res) => {
     if (req.session.user) {
       if (req.body.id === undefined) {
-        res.status(400).json({error: 'no id specified'});
+        res.status(400).json({ error: 'no id specified' });
         return;
       }
       const success = await database.bottomCustomer(req.session.user.uid, req.body.id, req.body.rsn);
-      res.json({response: success});
-    }
-    else {
-      res.status(403).json({error: 'who are you?'});
+      res.json({ response: success });
+    } else {
+      res.status(403).json({ error: 'who are you?' });
     }
   });
 
   app.get('/api/splits', async (req, res) => {
     if (req.session.user) {
-      res.json({response: await database.getSplits()});
+      await res.json({ response: await database.getSplits() });
     } else {
-      res.status(403).json({error: 'not logged in'});
+      res.status(403).json({ error: 'not logged in' });
     }
   });
 
@@ -270,38 +273,38 @@ exports.run = function (database, getQueueChannel) {
     res.send('<a href="http://localhost:8080/login/' + response + '">here</a>');
     //console.log(await database.grantRank('260731133572939776'));
   });
- 
+
   app.post('/api/request', async (req, res) => {
     let msg = `
-RSN: ${res.params.rsn}
-Discord: ${res.params.discord}
-Ironman: ${res.params.ironman} (${res.params.hm10tickets} tickets)
-BA completed up to: ${res.params.progress}
-Enhancer charges: ${res.params.charges} charges
-
-Levels:
-Current: A[L${res.params.has.attackerLvl},${res.params.has.attackerPts}] C[L${res.params.has.collectorLvl},${res.params.has.collectorPts}] D[L${res.params.has.defenderLvl},${res.params.has.defenderPts}] H[L${res.params.has.healerLvl},${res.params.has.healerPts}] 
-Needs: A[L${res.params.lvls.needAttLvl}] C[L${res.params.lvls.needColLvl}] D[L${res.params.lvls.needDefLvl}] H[L${res.params.lvls.needHealLvl}] 
-
-Items:
-Hats: ${res.params.items.hats}
-Boots: ${res.params.items.boots}
-Gloves: ${res.params.items.gloves}
-Torso: ${res.params.items.torso}
-Skirt: ${res.params.items.skirt}
-Trident: ${res.params.items.trident}
-Master Trident: ${res.params.items.masterTrident}
-Armour Patches: ${res.params.items.armourPatches}
-Attacker Insignia: ${res.params.items.attackerInsignia}
-Defender Insignia: ${res.params.items.defenderInsignia}
-Healer Insignia: ${res.params.items.healerInsignia}
-Collector Insignia: ${res.params.items.collectorInsignia}
-
-Net Pts: ${res.params.pts.attacker} att + ${res.params.pts.collector} col + ${res.params.pts.defender} def + ${res.params.pts.healer} heal
-Net XP: ${res.params.bxp.agility} agility + ${res.params.bxp.firemaking} firemaking + ${res.params.bxp.mining} mining
-Net Queens: ${res.params.queen}; solo: ${res.params.nmSolo}
-Net Kings: ${res.params.king}; solo: ${res.params.kingSolo}
-`
+  RSN: ${res.params.rsn}
+  Discord: ${res.params.discord}
+  Ironman: ${res.params.ironman} (${res.params.hm10tickets} tickets)
+  BA completed up to: ${res.params.progress}
+  Enhancer charges: ${res.params.charges} charges
+  
+  Levels:
+  Current: A[L${res.params.has.attackerLvl},${res.params.has.attackerPts}] C[L${res.params.has.collectorLvl},${res.params.has.collectorPts}] D[L${res.params.has.defenderLvl},${res.params.has.defenderPts}] H[L${res.params.has.healerLvl},${res.params.has.healerPts}] 
+  Needs: A[L${res.params.lvls.needAttLvl}] C[L${res.params.lvls.needColLvl}] D[L${res.params.lvls.needDefLvl}] H[L${res.params.lvls.needHealLvl}] 
+  
+  Items:
+  Hats: ${res.params.items.hats}
+  Boots: ${res.params.items.boots}
+  Gloves: ${res.params.items.gloves}
+  Torso: ${res.params.items.torso}
+  Skirt: ${res.params.items.skirt}
+  Trident: ${res.params.items.trident}
+  Master Trident: ${res.params.items.masterTrident}
+  Armour Patches: ${res.params.items.armourPatches}
+  Attacker Insignia: ${res.params.items.attackerInsignia}
+  Defender Insignia: ${res.params.items.defenderInsignia}
+  Healer Insignia: ${res.params.items.healerInsignia}
+  Collector Insignia: ${res.params.items.collectorInsignia}
+  
+  Net Pts: ${res.params.pts.attacker} att + ${res.params.pts.collector} col + ${res.params.pts.defender} def + ${res.params.pts.healer} heal
+  Net XP: ${res.params.bxp.agility} agility + ${res.params.bxp.firemaking} firemaking + ${res.params.bxp.mining} mining
+  Net Queens: ${res.params.queen}; solo: ${res.params.nmSolo}
+  Net Kings: ${res.params.king}; solo: ${res.params.kingSolo}
+  `
     getQueueChannel().then(queueChannel => {
       queueChannel.send("```" + msg + "```")
     })
@@ -330,21 +333,21 @@ Net Kings: ${res.params.king}; solo: ${res.params.kingSolo}
 
   // anything else
   // route for handling 404 requests(unavailable routes)
-  app.use(function (req, res, next) {
+  app.use(function (req, res) {
     res.status(404).send("Cannot find url")
   });
 
   try {
     const privateKey = fs.readFileSync('/etc/letsencrypt/live/leechba.site/privkey.pem');
     const certificate = fs.readFileSync('/etc/letsencrypt/live/leechba.site/fullchain.pem');
-    const credentials = {key: privateKey, cert: certificate};
+    const credentials = { key: privateKey, cert: certificate };
     const httpsServer = https.createServer(credentials, app);
-    httpsServer.listen(8443, HOST);
-  } catch (error){
-    console.log('unable to start up HTTPS');
-    console.log(error);
+    httpsServer.listen(443, HOST);
+  } catch (error) {
+    console.warn('Unable to start up HTTPS');
+    console.warn(error.message);
   }
 
   const httpServer = http.createServer(app);
-  httpServer.listen(8080, HOST);
+  httpServer.listen(80, HOST);
 };

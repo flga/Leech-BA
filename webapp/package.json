@@ -1,6 +1,6 @@
 {
   "name": "leech-ba",
-  "version": "0.0.0",
+  "version": "1.0.3",
   "scripts": {
     "ng": "ng",
     "start": "ng serve --proxy-config proxy.conf.json",
@@ -37,13 +37,14 @@
     "jquery": "^3.3.1",
     "loadash": "^1.0.0",
     "ngx-cookie-service": "^1.0.10",
+    "node-sass": "^4.13.0",
     "popper": "^1.0.1",
     "rxjs": "^6.3.3",
     "rxjs-compat": "^6.3.3",
     "zone.js": "^0.8.26"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^0.11.4",
+    "@angular-devkit/build-angular": "^0.13.0",
     "@angular/cli": "^7.1.4",
     "@angular/compiler-cli": "^7.1.4",
     "@angular/language-service": "^7.1.4",
@@ -68,7 +69,7 @@
     "tslint": "^5.12.0",
     "typescript": "3.1.6",
     "webpack": "^4.28.2",
-    "webpack-bundle-analyzer": "^2.13.1"
+    "webpack-bundle-analyzer": "^3.7.0"
   },
   "jest": {
     "testRegex": ".+\\.test\\.ts$",

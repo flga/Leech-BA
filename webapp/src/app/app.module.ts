@@ -16,6 +16,7 @@ import { SplitsModule } from './splits/splits.module';
 import { LegacyCalculatorComponent } from './legacy-calculator/legacy-calculator.component';
 import { InformationComponent } from './information/information.component';
 import { LeechingGuideComponent } from './leeching-guide/leeching-guide.component';
+import { RankListModule } from "./rank-list/rank-list.module";
 import { CalcModule } from './calc/calc.module';
 
 @NgModule({
@@ -36,6 +37,7 @@ import { CalcModule } from './calc/calc.module';
     MgwQueueModule,
     SplitsModule,
     NavModule,
+    RankListModule,
     FontAwesomeModule,
     MaterialModule
   ],
