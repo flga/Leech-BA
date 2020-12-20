@@ -351,16 +351,16 @@ export class CalcComponent implements OnInit, OnDestroy {
 			})
 		);
 		this.addSubscription(this.form.get('progress').valueChanges.subscribe({
-				next: (progress) => {
-					if (progress != Progress.HM10) {
-						this.form.get('has').get('kings').reset()
-					}
-
-					if (progress >= Progress.HM1) {
-						this.onCollapse('hmUnlock');
-					}
+			next: (progress) => {
+				if (progress != Progress.HM10) {
+					this.form.get('has').get('kings').reset()
 				}
-			})
+
+				if (progress >= Progress.HM1) {
+					this.onCollapse('hmUnlock');
+				}
+			}
+		})
 		);
 
 		// toggle bxp section off for ironman
@@ -576,11 +576,6 @@ export class CalcComponent implements OnInit, OnDestroy {
 			wantsCollectorPts += 100 * form.items.armourPatches;
 		}
 
-		// if leech needs comp, add it
-		if (form.comp && queens <= 0) {
-			queens = 1;
-		}
-
 		// if leech needs king for trim, add it
 		if (form.lvls.needsKing && kings <= 0) {
 			kings = 1;
@@ -588,6 +583,26 @@ export class CalcComponent implements OnInit, OnDestroy {
 
 		kings -= form.has.kings;
 		kings = Math.max(kings, 0);
+
+		let needsPts = wantsAttackerPts > 0 ||
+			wantsDefenderPts > 0 ||
+			wantsCollectorPts > 0 ||
+			wantsHealerPts > 0 ||
+			wantsAttackerLvl > 1 ||
+			wantsDefenderLvl > 1 ||
+			wantsCollectorLvl > 1 ||
+			wantsHealerLvl > 1;
+
+		let needsBxp = CalcComponent.parseBxpVal(form.bxp.agility) > 0 ||
+			CalcComponent.parseBxpVal(form.bxp.firemaking) > 0 ||
+			CalcComponent.parseBxpVal(form.bxp.mining) > 0
+
+		// if leech needs comp, add it
+		let wantsComp = form.comp && form.progress === Progress.NM1;
+		let needsComp = form.progress === Progress.NM1 && (needsPts || needsBxp || kings > 0);
+		if ((wantsComp || needsComp) && queens <= 0) {
+			queens = 1
+		}
 
 		return {
 			queens,

@@ -56,6 +56,9 @@ exports.run = function (database, getQueueChannel) {
   app.get('/calculator', (req, res) => {
     res.sendFile(root + '/index.html');
   });
+  app.get('/betacalculator', (req, res) => {
+    res.sendFile(root + '/index.html');
+  });
   app.get('/info', (req, res) => {
     res.sendFile(root + '/index.html');
   });
@@ -275,38 +278,95 @@ exports.run = function (database, getQueueChannel) {
   });
 
   app.post('/api/request', async (req, res) => {
-    let msg = `
-  RSN: ${res.params.rsn}
-  Discord: ${res.params.discord}
-  Ironman: ${res.params.ironman} (${res.params.hm10tickets} tickets)
-  BA completed up to: ${res.params.progress}
-  Enhancer charges: ${res.params.charges} charges
-  
-  Levels:
-  Current: A[L${res.params.has.attackerLvl},${res.params.has.attackerPts}] C[L${res.params.has.collectorLvl},${res.params.has.collectorPts}] D[L${res.params.has.defenderLvl},${res.params.has.defenderPts}] H[L${res.params.has.healerLvl},${res.params.has.healerPts}] 
-  Needs: A[L${res.params.lvls.needAttLvl}] C[L${res.params.lvls.needColLvl}] D[L${res.params.lvls.needDefLvl}] H[L${res.params.lvls.needHealLvl}] 
-  
-  Items:
-  Hats: ${res.params.items.hats}
-  Boots: ${res.params.items.boots}
-  Gloves: ${res.params.items.gloves}
-  Torso: ${res.params.items.torso}
-  Skirt: ${res.params.items.skirt}
-  Trident: ${res.params.items.trident}
-  Master Trident: ${res.params.items.masterTrident}
-  Armour Patches: ${res.params.items.armourPatches}
-  Attacker Insignia: ${res.params.items.attackerInsignia}
-  Defender Insignia: ${res.params.items.defenderInsignia}
-  Healer Insignia: ${res.params.items.healerInsignia}
-  Collector Insignia: ${res.params.items.collectorInsignia}
-  
-  Net Pts: ${res.params.pts.attacker} att + ${res.params.pts.collector} col + ${res.params.pts.defender} def + ${res.params.pts.healer} heal
-  Net XP: ${res.params.bxp.agility} agility + ${res.params.bxp.firemaking} firemaking + ${res.params.bxp.mining} mining
-  Net Queens: ${res.params.queen}; solo: ${res.params.nmSolo}
-  Net Kings: ${res.params.king}; solo: ${res.params.kingSolo}
-  `
+    let progress = "";
+    switch (req.body.progress) {
+      case 1: progress = "NM1"; break;
+      case 2: progress = "HM1"; break;
+      case 3: progress = "HM6"; break;
+      case 4: progress = "HM10"; break;
+    }
+
+    let prologue = `
+RSN: ${req.body.rsn}
+Discord: ${req.body.discord}
+Ironman: ${req.body.ironman} (${req.body.hm10tickets} tickets)
+BA completed up to: ${progress}
+Enhancer charges: ${req.body.charges} charges
+
+Net:`;
+
+    if (
+      req.body.pts.attacker > 0 ||
+      req.body.pts.collector > 0 ||
+      req.body.pts.defender > 0 ||
+      req.body.pts.healer > 0
+    ) {
+      prologue += `\n Pts: ${req.body.pts.attacker} att + ${req.body.pts.collector} col + ${req.body.pts.defender} def + ${req.body.pts.healer} heal`
+    }
+
+    if (
+      req.body.bxp.agility > 0 ||
+      req.body.bxp.firemaking > 0 ||
+      req.body.bxp.mining > 0
+    ) {
+      prologue += `\n XP: ${req.body.bxp.agility} agility + ${req.body.bxp.firemaking} firemaking + ${req.body.bxp.mining} mining`
+    }
+
+    if (req.body.queen > 0) {
+      prologue += `\n Queens: ${req.body.queen}; solo: ${req.body.nmSolo}`
+    }
+    if (req.body.king > 0) {
+      prologue += `\n Kings: ${req.body.king}; solo: ${req.body.kingSolo}`
+    }
+    prologue += "\n";
+
+    if (req.body.lvls.needAttLvl > 1 || req.body.lvls.needColLvl > 1 || req.body.lvls.needDefLvl > 1 || req.body.lvls.needHealLvl > 1) {
+      prologue += "\n";
+      prologue += `
+Levels:
+  Current: A[L${req.body.has.attackerLvl},${req.body.has.attackerPts}] C[L${req.body.has.collectorLvl},${req.body.has.collectorPts}] D[L${req.body.has.defenderLvl},${req.body.has.defenderPts}] H[L${req.body.has.healerLvl},${req.body.has.healerPts}] 
+  Needs: A[L${req.body.lvls.needAttLvl}] C[L${req.body.lvls.needColLvl}] D[L${req.body.lvls.needDefLvl}] H[L${req.body.lvls.needHealLvl}] 
+      `;
+    }
+
+    if (
+      req.body.items.hats > 0 ||
+      req.body.items.boots > 0 ||
+      req.body.items.gloves > 0 ||
+      req.body.items.torso > 0 ||
+      req.body.items.skirt > 0 ||
+      req.body.items.trident > 0 ||
+      req.body.items.masterTrident > 0 ||
+      req.body.items.armourPatches > 0 ||
+      req.body.items.attackerInsignia > 0 ||
+      req.body.items.defenderInsignia > 0 ||
+      req.body.items.healerInsignia > 0 ||
+      req.body.items.collectorInsignia > 0
+    ) {
+      prologue += "\n";
+      prologue += `
+Items:
+  Hats: ${req.body.items.hats}
+  Boots: ${req.body.items.boots}
+  Gloves: ${req.body.items.gloves}
+  Torso: ${req.body.items.torso}
+  Skirt: ${req.body.items.skirt}
+  Trident: ${req.body.items.trident}
+  Master Trident: ${req.body.items.masterTrident}
+  Armour Patches: ${req.body.items.armourPatches}
+  Attacker Insignia: ${req.body.items.attackerInsignia}
+  Defender Insignia: ${req.body.items.defenderInsignia}
+  Healer Insignia: ${req.body.items.healerInsignia}
+  Collector Insignia: ${req.body.items.collectorInsignia}
+      `;
+    }
+
     getQueueChannel().then(queueChannel => {
-      queueChannel.send("```" + msg + "```")
+      queueChannel.send("```" + prologue + "```")
+    }).then(() => {
+      res.sendStatus(200);
+    }).catch(() => {
+      res.sendStatus(500);
     })
   });
 
