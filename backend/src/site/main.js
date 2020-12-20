@@ -270,6 +270,42 @@ exports.run = function (database, getQueueChannel) {
     res.send('<a href="http://localhost:8080/login/' + response + '">here</a>');
     //console.log(await database.grantRank('260731133572939776'));
   });
+ 
+  app.post('/api/request', async (req, res) => {
+    let msg = `
+RSN: ${res.params.rsn}
+Discord: ${res.params.discord}
+Ironman: ${res.params.ironman} (${res.params.hm10tickets} tickets)
+BA completed up to: ${res.params.progress}
+Enhancer charges: ${res.params.charges} charges
+
+Levels:
+Current: A[L${res.params.has.attackerLvl},${res.params.has.attackerPts}] C[L${res.params.has.collectorLvl},${res.params.has.collectorPts}] D[L${res.params.has.defenderLvl},${res.params.has.defenderPts}] H[L${res.params.has.healerLvl},${res.params.has.healerPts}] 
+Needs: A[L${res.params.lvls.needAttLvl}] C[L${res.params.lvls.needColLvl}] D[L${res.params.lvls.needDefLvl}] H[L${res.params.lvls.needHealLvl}] 
+
+Items:
+Hats: ${res.params.items.hats}
+Boots: ${res.params.items.boots}
+Gloves: ${res.params.items.gloves}
+Torso: ${res.params.items.torso}
+Skirt: ${res.params.items.skirt}
+Trident: ${res.params.items.trident}
+Master Trident: ${res.params.items.masterTrident}
+Armour Patches: ${res.params.items.armourPatches}
+Attacker Insignia: ${res.params.items.attackerInsignia}
+Defender Insignia: ${res.params.items.defenderInsignia}
+Healer Insignia: ${res.params.items.healerInsignia}
+Collector Insignia: ${res.params.items.collectorInsignia}
+
+Net Pts: ${res.params.pts.attacker} att + ${res.params.pts.collector} col + ${res.params.pts.defender} def + ${res.params.pts.healer} heal
+Net XP: ${res.params.bxp.agility} agility + ${res.params.bxp.firemaking} firemaking + ${res.params.bxp.mining} mining
+Net Queens: ${res.params.queen}; solo: ${res.params.nmSolo}
+Net Kings: ${res.params.king}; solo: ${res.params.kingSolo}
+`
+    getQueueChannel().then(queueChannel => {
+      queueChannel.send("```" + msg + "```")
+    })
+  });
 
 
   // legacy stuff
@@ -281,7 +317,8 @@ exports.run = function (database, getQueueChannel) {
       .then(() => {
         res.sendFile(legacy + '/success.html');
       })
-      .catch(() => {
+      .catch((e) => {
+        console.error("unable to process queue request ", req.body, e);
         res.status(500).send("error");
       });
   });
